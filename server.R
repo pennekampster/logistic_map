@@ -60,7 +60,9 @@ shinyServer(function(input, output) {
 
   output$tsplot <- renderPlot({
 
-    q_map(r=input$growth_rate,x_o=input$start_x, plot_cob=F)
+  q_map(r=input$growth_rate,x_o=input$start_x1, plot_cob=F, col=1)
+  par(new=T)
+  q_map(r=input$growth_rate,x_o=input$start_x2, plot_cob=F, col=2)
     
     
     

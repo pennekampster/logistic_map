@@ -13,15 +13,26 @@ shinyUI(fluidPage(
   titlePanel("Logistic map"),
 
   # Sidebar with a slider input for number of bins
-  sidebarLayout(
+  #sidebarLayout(
     
-    sidebarPanel(
-      sliderInput("start_x",
-                  "Initial value:",
-                  min = 0,
-                  max = 1,
-                  step = 0.01,
-                  value = 0.4)
+    fluidRow(
+      column(width = 4, offset=4,
+      
+      numericInput("start_x1",
+                   "Initial value 1:", 
+                   0.6, 
+                   min = NA, 
+                   max = NA, 
+                   step = NA,
+                   width = NULL)  
+    ,
+    numericInput("start_x2",
+                 "Initial value 2:", 
+                 0.6, 
+                 min = NA, 
+                 max = NA, 
+                 step = NA,
+                 width = NULL) 
     ,
     
       sliderInput("growth_rate",
@@ -33,8 +44,11 @@ shinyUI(fluidPage(
     ),
 
     # Show a plot of the generated distribution
-    mainPanel(
+    fluidRow(
+      column(width = 12, 
       plotOutput("tsplot")
     )
   )
-))
+)
+)
+)

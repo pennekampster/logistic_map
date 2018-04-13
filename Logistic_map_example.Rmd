@@ -1,0 +1,43 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+logistic_map <- function(N=NULL, x_0, r=NULL, measurement_error = 0, dynamic_error = 0){
+#  N = 100
+#  x_0 <- .1
+#  r=2.8
+#  measurement_error = 0.1
+# dynamic_error = .01
+ 
+   x<-array(dim=N)
+  x[1]<-x_0
+  for(i in 2:N){
+    draw=T
+    while(draw){
+      y <- r*x[i-1]*(1-x[i-1])+rnorm(1, mean = 0, sd=dynamic_error)
+      
+      if(measurement_error > 0) {y <- y+rnorm(1, mean = 0, sd=measurement_error)} else ( y<-y)
+      
+      if(all(y > 0 & y < 1)) {draw = F} else{draw = T}
+        
+    }
+   
+    x[i]<-y
+        
+  }
+  
+  x
+  
+} 
+
+```
+
+```{r}
+plot(1:100, logistic_map(N=100, x_0 = .1, r=2, measurement_error =  0), type = "l", ylim=c(0,1))
+lines(logistic_map(N=100, x_0 = .1, r=2, dynamic_error = 0), col = "red")
+
+```
+
+

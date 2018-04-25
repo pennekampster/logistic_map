@@ -10,14 +10,13 @@ logistic_map <- function(N=NULL, x_0, r=NULL, measurement_error = 0, dynamic_err
 #  r=2.8
 #  measurement_error = 0.1
 # dynamic_error = .01
- 
-   x<-array(dim=N)
+  x<-array(dim=N)
   x[1]<-x_0
   for(i in 2:N){
     draw=T
     while(draw){
       y <- r*x[i-1]*(1-x[i-1])+rnorm(1, mean = 0, sd=dynamic_error)
-      
+    
       if(measurement_error > 0) {y <- y+rnorm(1, mean = 0, sd=measurement_error)} else ( y<-y)
       
       if(all(y > 0 & y < 1)) {draw = F} else{draw = T}
@@ -32,12 +31,94 @@ logistic_map <- function(N=NULL, x_0, r=NULL, measurement_error = 0, dynamic_err
   
 } 
 
+
+EDM_fit <- function(x, step_ahead = 1, word_length = 2, show_tuning_plots=F, return_df=F){
+  
+  # x <- abd
+  # step_ahead = 20
+  # word_length = 4
+  # show_tuning_plots=F
+  # return_df=F
+  
+  # define steps ahead forecast
+  simplex_fit <- simplex(as.numeric(x), lib = c(1, (length(x)-step_ahead)),  stats_only = T, E = 1:10, norm_type = c("L2 norm"), silent=T)
+  E_hat_rho <- simplex_fit[which(max(simplex_fit$rho)==simplex_fit$rho)[1], ]$E
+
+  smap_fit <- s_map(as.numeric(x), lib = c(1, (length(x)-step_ahead)),  stats_only = T, norm_type = c("L2 norm"), E = E_hat_rho, silent=T)
+  theta_hat_rho <- smap_fit[which(max(smap_fit$rho)==smap_fit$rho), ]$theta
+
+  if(show_tuning_plots){
+    
+  plot(simplex_fit$E, simplex_fit$rho, type="l", xlab = "Embedding dimension (E)", ylab="Forecast skill (rho)")
+  abline(v=E_hat_rho, col="red", lty=2)
+  
+  plot(smap_fit$theta, smap_fit$rho, type="l", xlab = "Theta", ylab="Forecast skill (rho)")
+  abline(v=theta_hat_rho, col="red", lty=2)
+
+  }
+  
+  
+  smap_fit <- s_map(as.numeric(x), lib = c(1, (length(x)-step_ahead)),  stats_only = F, norm_type = c("L2 norm"), E = E_hat_rho, theta = theta_hat_rho, silent=T)
+  #dd_ts[i, 10][[1]] <- smap_fit
+  
+  smap_pred  <- s_map(as.numeric(x), lib = c(1, (length(x)-step_ahead)), pred = c( c((length(x)-step_ahead-E_hat_rho)),  length(x)),  stats_only = F, norm_type = c("L2 norm"), E = E_hat_rho, theta = theta_hat_rho, silent=T)
+ 
+     # info on nrmse and PE
+   smap_pred$nrmse <- smap_pred$rmse / (max(x, na.rm=T) - min(x, na.rm=T))
+   smap_pred$WPE <- PE(x, weighted=T, tau=1, word_length = word_length, tie_method = "first")
+   
+   
+    {plot(1:length(x),x, type="l", xlab = "Time", ylab="Abundance" 
+         ,ylim = range(min(smap_pred$model_output[[1]]$pred,x), max(smap_pred$model_output[[1]]$pred,x)))
+     points(smap_pred$model_output[[1]]$time, smap_pred$model_output[[1]]$pred, col=2,ylim =range(min(smap_pred$model_output[[1]]$pred,x), max(smap_pred$model_output[[1]]$pred,x)))
+     lines(smap_pred$model_output[[1]]$time, smap_pred$model_output[[1]]$pred, col=2,ylim =range(min(smap_pred$model_output[[1]]$pred,x), max(smap_pred$model_output[[1]]$pred,x)))
+     mtext(paste0("WPE: ", round(smap_pred$WPE, 4), "\n nRMSE: ",    round(smap_pred$nrmse, 4)))}
+
+   if(return_df) smap_pred
+}
+
+
+
+
+```
+
+
+```{r}
+source("/Users/Frank/Documents/Git projects/spred-working-group/tools/perment/pe_code.R")
 ```
 
 ```{r}
-plot(1:100, logistic_map(N=100, x_0 = .1, r=2, measurement_error =  0), type = "l", ylim=c(0,1))
-lines(logistic_map(N=100, x_0 = .1, r=2, dynamic_error = 0), col = "red")
+abd <- logistic_map(N=100, x_0 = .1, r=3.4, measurement_error = 0.0, dynamic_error = 0)
+abd_complex <- logistic_map(N=100, x_0 = .1, r=3.9, measurement_error = 0.0, dynamic_error = 0)
+
+
+layout(matrix(c(1,2), 2, 1, byrow = TRUE))
+smap <- EDM_fit(abd, step_ahead = 20, word_length = 4)
+smap <- EDM_fit(abd_complex, step_ahead = 20, word_length = 4)
+layout(matrix(c(1,1), 1, 1, byrow = TRUE))
 
 ```
 
+```{r}
+abd <- logistic_map(N=100, x_0 = .1, r=3.4, measurement_error = 0.0, dynamic_error = 0)
+abd_noise <- logistic_map(N=100, x_0 = .1, r=3.4, measurement_error = 0.01, dynamic_error = 0)
 
+
+layout(matrix(c(1,2), 2, 1, byrow = TRUE))
+smap <- EDM_fit(abd, step_ahead = 20, word_length = 4)
+smap <- EDM_fit(abd_noise, step_ahead = 20, word_length = 4)
+layout(matrix(c(1,1), 1, 1, byrow = TRUE))
+```
+
+```{r}
+abd <- logistic_map(N=100, x_0 = .1, r=3.8, measurement_error = 0, dynamic_error = 0)
+abd_noise <- logistic_map(N=100, x_0 = .1, r=3.8, measurement_error = 0, dynamic_error = 0.1)
+
+
+
+layout(matrix(c(1,2), 2, 1, byrow = TRUE))
+smap <- EDM_fit(abd, step_ahead = 20, word_length = 4)
+smap <- EDM_fit(abd_noise, step_ahead = 20, word_length = 4)
+layout(matrix(c(1,1), 1, 1, byrow = TRUE))
+
+```

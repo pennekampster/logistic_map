@@ -1,6 +1,8 @@
 ---
 title: "R Notebook"
 output: html_notebook
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r}
@@ -122,3 +124,24 @@ smap <- EDM_fit(abd_noise, step_ahead = 20, word_length = 4)
 layout(matrix(c(1,1), 1, 1, byrow = TRUE))
 
 ```
+
+```{r}
+set.seed(874382357)
+abd <- logistic_map(N=100, x_0 = .1, r=3.9, measurement_error = 0, dynamic_error = 0)
+abd_dyn_noise <- logistic_map(N=100, x_0 = .1, r=3.9, measurement_error = 0, dynamic_error = 0.1)
+abd_mea_noise <- logistic_map(N=100, x_0 = .1, r=3.9, measurement_error = 0.1, dynamic_error = 0)
+
+
+
+layout(matrix(c(1,2,3), 3, 1, byrow = TRUE))
+smap <- EDM_fit(abd, step_ahead = 20, word_length = 4)
+smap <- EDM_fit(abd_mea_noise, step_ahead = 20, word_length = 4)
+smap <- EDM_fit(abd_dyn_noise, step_ahead = 20, word_length = 4)
+layout(matrix(c(1,1), 1, 1, byrow = TRUE))
+
+```
+
+
+
+
+
